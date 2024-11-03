@@ -1,56 +1,45 @@
-# import tty, termios, sys, os
-# fd = sys.stdin.fileno()
+import tty, termios, sys, os, string
 
-# def getchar():
-#    #Returns a single character from standard input
-#    old_settings = termios.tcgetattr(fd)
-#    try:
-#       tty.setraw(sys.stdin.fileno())
-#       ch = sys.stdin.read(1)
-#    finally:
-#       termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-#    return ch
-   
-# while 1:
-#     ch = getchar()
-#     os.write(sys.stdin.fileno(), ch.encode())
-#     if ch == 'q': 
-#        break
-#     elif ch == '?':
-#         os.write(sys.stdin.fileno(), b'\nyes\n')
-
-import tty, termios, sys, os
+# получить номера дескрипторов потоков
 fin = sys.stdin.fileno()
 fout = sys.stdout.fileno()
-prompt = ' # '
+PROMPT = ' # '
+TIP_TEXT = 'tip text'
 
-def wrapper():
-    data = b''
+def input_wrapper(prompt, tip_text) -> str:
+    buffer = b''
+    # сохранить предыдущие настройки терминала
     old_settings = termios.tcgetattr(fin)
     try:
+        # перевести терминал в raw mode
         tty.setraw(sys.stdin.fileno())
+        # пока осуществляется ввод...
         while 1:
+            # читать по одному символу из stdin
             ch = sys.stdin.read(1)
             if ch == '?':
                 os.write(fout, b'\r\n')
-                os.write(sys.stdin.fileno(), b'yes')
+                os.write(sys.stdin.fileno(), tip_text.encode())
                 os.write(fout, b'\r\n')
                 os.write(fout, prompt.encode())
-                os.write(fout, data)
-            else: 
-                os.write(fout, ch.encode())
-                data = data + ch.encode()
-            if ord(ch) in [13]: # 13 - '\r'
+                os.write(fout, buffer)
+            # завершить цикл при нажатии ENTER
+            elif ch == '\r': # enter button
                 break
+            # записать в буфер все видимые символы
+            elif ch in string.printable: 
+                os.write(fout, ch.encode())
+                buffer = buffer + ch.encode()
     finally:
         termios.tcsetattr(fin, termios.TCSADRAIN, old_settings)
-    return data
+    return buffer.decode()
 
 while 1:
-    os.write(fout, b' # ')
-    data = wrapper().decode()
-    if 'dima' in data:
+    os.write(fout, PROMPT.encode())
+    data = input_wrapper(PROMPT, TIP_TEXT)
+    if 'dima' == data:
         os.write(fout, b'\nopopopopo')
-    if 'exit' in data:
+    if 'exit' == data:
+        os.write(fout, b'\n')
         break
     os.write(fout, b'\n')
