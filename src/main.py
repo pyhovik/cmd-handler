@@ -1,4 +1,5 @@
 import tty, termios, sys, os, string
+from commands import *
 
 # получить номера дескрипторов потоков
 fin = sys.stdin.fileno()
@@ -37,9 +38,11 @@ def input_wrapper(prompt, tip_text) -> str:
 while 1:
     os.write(fout, PROMPT.encode())
     data = input_wrapper(PROMPT, TIP_TEXT)
-    if 'dima' == data:
-        os.write(fout, b'\nopopopopo')
     if 'exit' == data:
         os.write(fout, b'\n')
         break
+    try:
+        os.write(fout, command_map[data].encode())
+    except KeyError:
+        pass
     os.write(fout, b'\n')
