@@ -13,14 +13,14 @@ def input_wrapper(prompt, tip_text) -> str:
     old_settings = termios.tcgetattr(fin)
     try:
         # перевести терминал в raw mode
-        tty.setraw(sys.stdin.fileno())
+        tty.setraw(fin)
         # пока осуществляется ввод...
         while 1:
             # читать по одному символу из stdin
             ch = sys.stdin.read(1)
             if ch == '?':
                 os.write(fout, b'\r\n')
-                os.write(sys.stdin.fileno(), tip_text.encode())
+                os.write(fout, tip_text.encode())
                 os.write(fout, b'\r\n')
                 os.write(fout, prompt.encode())
                 os.write(fout, buffer)

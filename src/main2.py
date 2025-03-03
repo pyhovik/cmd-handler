@@ -24,14 +24,14 @@ def input_wrapper(prompt, tip_text) -> str:
     old_settings = termios.tcgetattr(fin)
     try:
         # перевести терминал в raw mode
-        tty.setraw(sys.stdin.fileno())
+        tty.setraw(fin)
         # пока осуществляется ввод...
         while 1:
             # читать по одному символу из stdin
             ch = sys.stdin.read(1)
             if ch == '?':
                 os.write(fout, b'\r\n')
-                os.write(sys.stdin.fileno(), tip_text.encode())
+                os.write(fout, tip_text.encode())
                 os.write(fout, b'\r\n')
                 os.write(fout, prompt.encode())
                 os.write(fout, buffer)
@@ -67,7 +67,10 @@ def init_aliases():
 
 def handler_loop():
     # получить список алиасов
-    alias_map = init_aliases()
+    try:
+        alias_map = init_aliases()
+    except:
+        alias_map = dict()
     prompt = PROMPT_UNPRIVILEGED
     while 1:
         os.write(fout, prompt.encode())
